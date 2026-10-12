@@ -29,6 +29,10 @@ public class Shield {
         }
     }
     
+     public boolean discard(){
+        return Dice.discardElement(uses);
+    }
+    
     @Override
     public String toString(){
         return "S[" + protection + ", " + uses + "]"; 

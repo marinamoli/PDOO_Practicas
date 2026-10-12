@@ -28,10 +28,10 @@ public class Weapon {
     }
     
     public boolean discard(){
-        return false;
+        return Dice.discardElement(uses);
     }
             
-            
+           
     @Override
     public String toString(){
         return "W[" + power + ", " + uses + "]";
