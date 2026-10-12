@@ -14,5 +14,11 @@ public class TestP1 {
           System.out.println(w.attack());
             }
         System.out.println(w);  // W[2.0, 0]
+        
+        
+        Shield s = new Shield(3.0f, 4);
+        System.out.println(s);            // S[3.0, 4]
+        System.out.println(s.protect());  // 3.0
+        System.out.println(s);            // S[3.0, 3]
     }
 }
