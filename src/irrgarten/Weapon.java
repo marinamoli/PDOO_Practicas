@@ -26,6 +26,12 @@ public class Weapon {
             return 0;
 
     }
+    
+    public boolean discard(){
+        return false;
+    }
+            
+            
     @Override
     public String toString(){
         return "W[" + power + ", " + uses + "]";
