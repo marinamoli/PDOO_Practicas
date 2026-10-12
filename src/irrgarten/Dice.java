@@ -89,6 +89,7 @@ public class Dice {
     }
     
     public static boolean discardElement(int usesLeft){
-        return false;
+        float probDescartar = 1 - (float) usesLeft / MAX_USES;
+        return generator.nextFloat() < probDescartar;
     }
 }
