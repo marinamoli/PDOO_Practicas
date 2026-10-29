@@ -53,7 +53,7 @@ public class TestP1 {
         System.out.println(gs.getPlayers());
         System.out.println(gs.getMonsters());
         System.out.println(gs.getCurrentPlayer());
-        System.out.println(gs.getWinner());
+        System.out.println(gs.isWinner());
         System.out.println(gs.getLog());
 
         // ===================== DICE (100 veces cada método) =====================

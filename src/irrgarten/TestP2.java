@@ -19,7 +19,7 @@ public class TestP2 {
         System.out.println("\n[*] Obteniendo GameState inicial:");
         GameState state = game.getGameState();
         System.out.println("- Turno del jugador (Índice del jugador): " + state.getCurrentPlayer());
-        System.out.println("- Hay un ganador: " + state.getWinner());
+        System.out.println("- Hay un ganador: " + state.isWinner());
         System.out.println("\n- Jugadores en partida:\n" + state.getPlayers());
         
         // Compruebo como va el cambio de turno
