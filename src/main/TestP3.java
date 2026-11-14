@@ -1,11 +1,13 @@
+package main;
+
+import irrgarten.Controller.Controller;
 import irrgarten.Game;
-import ui.TextUI;
-import controller.Controller;
+import irrgarten.UI.TextUI;
 
 public class TestP3 {
     public static void main(String[] args) {
-        Game game = new Game(2);
         TextUI view = new TextUI();
+        Game game = new Game(2);
         Controller controller = new Controller(game, view);
         controller.play();
     }

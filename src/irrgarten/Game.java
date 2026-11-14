@@ -4,25 +4,28 @@ import java.util.ArrayList;
 
 public class Game {
     private static final int MAX_ROUNDS = 10;
-    
+
     private int currentPlayerIndex;
     private String log;
-    
+
+    private Player currentPlayer;
     private ArrayList<Player> players;
     private ArrayList<Monster> monsters;
     private Labyrinth labyrinth;
 
-    public Game(int nPlayers) {
-        this.players = new ArrayList<>();
-        this.monsters = new ArrayList<>();
-        this.log = "";
-        
-        for (int i = 0; i < nPlayers; i++) {
-            char num = (char) ('0' + i);
-            players.add(new Player(num, Dice.randomIntelligence(), Dice.randomStrength()));
+    public Game(int nplayers) {
+        players = new ArrayList<>();
+        for (int i = 0; i < nplayers; i++) {
+            char number = (char) ('0' + i);
+            players.add(new Player(number, Dice.randomIntelligence(), Dice.randomStrength()));
         }
-        
-        this.currentPlayerIndex = Dice.whoStarts(nPlayers);
+
+        currentPlayerIndex = Dice.whoStarts(nplayers);
+        currentPlayer = players.get(currentPlayerIndex);
+
+        monsters = new ArrayList<>();
+        log = "";
+
         configureLabyrinth();
         labyrinth.spreadPlayers(players);
     }
@@ -31,94 +34,157 @@ public class Game {
         return labyrinth.haveAWinner();
     }
 
+    // Diagrama Game__nextStep
     public boolean nextStep(Directions preferredDirection) {
         log = "";
-        Player currentPlayer = players.get(currentPlayerIndex);
-        
-        if (!currentPlayer.dead()) {
-            Directions[] validMoves = labyrinth.validMoves(currentPlayer.getRow(), currentPlayer.getCol());
-            Directions direction = currentPlayer.move(preferredDirection, validMoves);
-            Monster monster = labyrinth.move(direction, currentPlayer);
-            
-            if (monster != null) {
-                GameCharacter winner = combat(monster);
-                if (winner == GameCharacter.PLAYER) {
-                    currentPlayer.receiveReward();
-                    logPlayerWon();
-                } else {
-                    logMonsterWon();
-                }
-            } else {
+        boolean dead = currentPlayer.dead();
+
+        if (!dead) {
+            Directions direction = actualDirection(preferredDirection);
+            if (direction != preferredDirection) {
+                logPlayerNoOrders();
+            }
+
+            Monster monster = labyrinth.putPlayer(direction, currentPlayer);
+
+            if (monster == null) {
                 logNoMonster();
+            } else {
+                GameCharacter winner = combat(monster);
+                manageReward(winner);
             }
         } else {
-            manageRewardGame();
+            manageResurrection();
         }
-        
-        boolean win = finished();
-        if (!win) {
+
+        boolean endGame = finished();
+        if (!endGame) {
             nextPlayer();
         }
-        return win;
+        return endGame;
     }
 
     public GameState getGameState() {
-        StringBuilder pStr = new StringBuilder();
-        for (Player p : players) pStr.append(p.toString()).append("\n");
-        
-        StringBuilder mStr = new StringBuilder();
-        for (Monster m : monsters) mStr.append(m.toString()).append("\n");
+        String playersStr = "";
+        for (Player p : players) {
+            playersStr += p.toString() + "\n";
+        }
 
-        return new GameState(
-            labyrinth.toString(),
-            pStr.toString(),
-            mStr.toString(),
-            currentPlayerIndex,
-            finished(),
-            log
-        );
+        String monstersStr = "";
+        for (Monster m : monsters) {
+            monstersStr += m.toString() + "\n";
+        }
+
+        return new GameState(labyrinth.toString(), playersStr, monstersStr,
+                currentPlayerIndex, finished(), log);
     }
 
     private void configureLabyrinth() {
-        this.labyrinth = new Labyrinth(5, 5, 4, 4);
-        labyrinth.addBlock(Orientation.HORIZONTAL, 0, 1, 3);
-        labyrinth.addBlock(Orientation.VERTICAL, 1, 1, 2);
-        
-        Monster m1 = new Monster("Goblin", Dice.randomIntelligence(), Dice.randomStrength());
-        monsters.add(m1);
-        labyrinth.addMonster(3, 3, m1);
+        labyrinth = new Labyrinth(7, 9, 6, 8);
+
+        labyrinth.addBlock(Orientation.HORIZONTAL, 1, 1, 3);
+        labyrinth.addBlock(Orientation.VERTICAL, 3, 4, 3);
+        labyrinth.addBlock(Orientation.HORIZONTAL, 5, 6, 2);
+
+        Monster goblin = new Monster("Goblin", Dice.randomIntelligence(), Dice.randomStrength());
+        monsters.add(goblin);
+        labyrinth.addMonster(0, 4, goblin);
+
+        Monster orco = new Monster("Orco", Dice.randomIntelligence(), Dice.randomStrength());
+        monsters.add(orco);
+        labyrinth.addMonster(3, 2, orco);
+
+        Monster troll = new Monster("Troll", Dice.randomIntelligence(), Dice.randomStrength());
+        monsters.add(troll);
+        labyrinth.addMonster(4, 7, troll);
     }
 
     private void nextPlayer() {
-        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % players.size();
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        currentPlayer = players.get(currentPlayerIndex);
     }
 
+    // Diagrama Game__actualDirection
+    private Directions actualDirection(Directions preferredDirection) {
+        int currentRow = currentPlayer.getRow();
+        int currentCol = currentPlayer.getCol();
+        Directions[] validMoves = labyrinth.validMoves(currentRow, currentCol);
+        Directions output = currentPlayer.move(preferredDirection, validMoves);
+        return output;
+    }
+
+    // Diagrama Game__combat
     private GameCharacter combat(Monster monster) {
         int rounds = 0;
-        Player currentPlayer = players.get(currentPlayerIndex);
-        boolean lose = monster.defend(currentPlayer.attack());
-        
+        GameCharacter winner = GameCharacter.PLAYER;
+
+        float playerAttack = currentPlayer.attack();
+        boolean lose = monster.defend(playerAttack);
+
         while (!lose && rounds < MAX_ROUNDS) {
+            winner = GameCharacter.MONSTER;
             rounds++;
-            lose = currentPlayer.defend(monster.attack());
+
+            float monsterAttack = monster.attack();
+            lose = currentPlayer.defend(monsterAttack);
+
             if (!lose) {
-                lose = monster.defend(currentPlayer.attack());
+                playerAttack = currentPlayer.attack();
+                winner = GameCharacter.PLAYER;
+                lose = monster.defend(playerAttack);
             }
         }
-        
+
         logRounds(rounds, MAX_ROUNDS);
-        return lose ? GameCharacter.PLAYER : GameCharacter.MONSTER;
+        return winner;
     }
 
-    private void manageRewardGame() {
-        logResurrected();
-        players.get(currentPlayerIndex).resurrect();
+    // Diagrama Game__manageReward
+    private void manageReward(GameCharacter winner) {
+        if (winner == GameCharacter.PLAYER) {
+            currentPlayer.receiveReward();
+            logPlayerWon();
+        } else {
+            logMonsterWon();
+        }
     }
 
-    private void logPlayerWon() { log += "El jugador ha ganado el combate.\n"; }
-    private void logMonsterWon() { log += "El monstruo ha ganado el combate.\n"; }
-    private void logResurrected() { log += "El jugador ha resucitado.\n"; }
-    private void logPlayerSkip() { log += "El jugador está muerto y salta el turno.\n"; }
-    private void logNoMonster() { log += "El jugador se ha movido a una casilla vacía.\n"; }
-    private void logRounds(int rounds, int max) { log += "Combate finalizado tras " + rounds + " rondas.\n"; }
+    // Diagrama Game__manageResurrection
+    private void manageResurrection() {
+        boolean resurrect = Dice.resurrectPlayer();
+        if (resurrect) {
+            currentPlayer.resurrect();
+            logResurrected();
+        } else {
+            logPlayerSkipTurn();
+        }
+    }
+
+    private void logPlayerWon() {
+        log += "El jugador ha ganado el combate.\n";
+    }
+
+    private void logMonsterWon() {
+        log += "El monstruo ha ganado el combate.\n";
+    }
+
+    private void logResurrected() {
+        log += "El jugador ha resucitado.\n";
+    }
+
+    private void logPlayerSkipTurn() {
+        log += "El jugador ha perdido el turno por estar muerto.\n";
+    }
+
+    private void logPlayerNoOrders() {
+        log += "El jugador no ha seguido las instrucciones del jugador humano (no fue posible).\n";
+    }
+
+    private void logNoMonster() {
+        log += "El jugador se ha movido a una celda vacía o no le ha sido posible moverse.\n";
+    }
+
+    private void logRounds(int rounds, int max) {
+        log += "Se han producido " + rounds + " de " + max + " rondas de combate.\n";
+    }
 }

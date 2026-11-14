@@ -85,7 +85,7 @@ public class Dice {
     }
     
     public static float intensity(float competence){
-        return generator.nextFloat(competence); 
+        return generator.nextFloat() * competence;
     }
     
     public static boolean discardElement(int usesLeft){

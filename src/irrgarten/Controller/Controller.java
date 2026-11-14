@@ -1,7 +1,8 @@
-package controller;
+package irrgarten.Controller;
 
+import irrgarten.Directions;
 import irrgarten.Game;
-import ui.TextUI;
+import irrgarten.UI.TextUI;
 
 public class Controller {
     private Game game;
@@ -13,12 +14,12 @@ public class Controller {
     }
 
     public void play() {
-        boolean end = false;
-        while (!end) {
+        boolean endOfGame = false;
+        while (!endOfGame) {
             view.showGame(game.getGameState());
-            end = game.nextStep(view.nextMove());
+            Directions direction = view.nextMove();
+            endOfGame = game.nextStep(direction);
         }
         view.showGame(game.getGameState());
-        System.out.println("¡JUEGO FINALIZADO!");
     }
 }
