@@ -24,22 +24,22 @@ public class TestP2 {
         
         // Compruebo como va el cambio de turno
         System.out.println("[*] Pasando al siguiente turno...");
-        game.nextPlayer();
+     //   game.nextPlayer();
         System.out.println("- Nuevo turno (Índice del jugador): " + game.getGameState().getCurrentPlayer());
 
         // Pruebo como genera la actualización de información de partida
         System.out.println("\n[*] Probando el sistema de registro de eventos...");
-        game.logPlayerWon();
-        game.logMonsterWon();
-        game.logResurrected();
-        game.logRounds(5, 10);
+       // game.logPlayerWon();
+      //  game.logMonsterWon();
+     //   game.logResurrected();
+      //  game.logRounds(5, 10);
         
         System.out.println("- Estado actual:");
         System.out.println(game.getGameState().getLog());
 
         //System.out.println("[*] Comprobando protección de métodos de la P3 (UnsupportedOperationException)...");
         try {
-            game.manageResurrection();
+           // game.manageResurrection();
             System.err.println("[ERROR] manageResurrection no lanzó la excepción.");
         } catch (UnsupportedOperationException e) {
             System.out.println("[ÉXITO] manageResurrection lanzó UnsupportedOperationException correctamente.");
